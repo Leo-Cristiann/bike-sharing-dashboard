@@ -4,38 +4,33 @@ Ini adalah proyek akhir berupa **dashboard interaktif** untuk menganalisis data 
 
 ---
 
-## 🚀 Cara Menjalankan Dashboard
+## 🛠️ Setup Environment
 
-### Prasyarat
-Pastikan Anda telah menginstal **Python** di komputer Anda sebelum memulai.
-
-### Langkah-langkah
-
-**1. Buka Terminal**
-
-Buka terminal atau command prompt, lalu navigasikan ke dalam folder proyek ini:
+### Menggunakan Anaconda
 
 ```bash
-cd path/to/folder-proyek
-```
-
-**2. Instal Dependensi**
-
-Instal semua library yang dibutuhkan dengan menjalankan perintah berikut:
-
-```bash
+conda create --name main-ds python=3.9
+conda activate main-ds
 pip install -r requirements.txt
 ```
 
-**3. Jalankan Dashboard**
-
-Setelah instalasi selesai, jalankan dashboard menggunakan Streamlit:
+### Menggunakan Shell/Terminal
 
 ```bash
-streamlit run dashboard.py
+mkdir proyek_analisis_data
+cd proyek_analisis_data
+pipenv install
+pipenv shell
+pip install -r requirements.txt
 ```
 
-**4. Buka di Browser**
+## 🚀 Cara Menjalankan Dashboard
+
+Setelah setup environment selesai, jalankan dashboard menggunakan Streamlit:
+
+```bash
+streamlit run dashboard/dashboard.py
+```
 
 Dashboard akan secara otomatis terbuka di browser default Anda, biasanya pada alamat:
 
@@ -44,15 +39,15 @@ http://localhost:8501
 ```
 
 ---
-
 ## 📁 Struktur Proyek
 
 ```
-├── dashboard.py               # File utama aplikasi dashboard Streamlit
-├── cleaned_bike_day.csv       # Dataset harian yang sudah dibersihkan
-├── cleaned_bike_hour.csv      # Dataset per jam yang sudah dibersihkan
-├── requirements.txt           # Daftar library Python yang dibutuhkan
-└── README.md                  # Dokumentasi cara menjalankan proyek
+├── dashboard/
+│   ├── dashboard.py              # File utama dashboard
+│   ├── cleaned_bike_day.csv      # Dataset penggunaan sepeda per hari
+│   └── cleaned_bike_hour.csv     # Dataset penggunaan sepeda per jam
+├── requirements.txt              # Daftar library yang dibutuhkan
+└── README.md                     # Dokumentasi proyek
 ```
 
 ---
