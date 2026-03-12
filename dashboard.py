@@ -20,7 +20,7 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
 /* ── global ── */
 html, body, [class*="css"] {
@@ -41,11 +41,12 @@ section[data-testid="stSidebar"] * { color: #F0EDE8 !important; }
 
 /* ── page title ── */
 .hero-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 3.2rem;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 3.2rem);
     font-weight: 800;
     letter-spacing: -1px;
-    line-height: 1.1;
+    line-height: 1.5;
+    white-space: nowrap;
     background: linear-gradient(90deg, #F5E642 0%, #F0EDE8 60%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -60,7 +61,7 @@ section[data-testid="stSidebar"] * { color: #F0EDE8 !important; }
 
 /* ── section heading ── */
 .section-label {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 1.35rem;
     font-weight: 700;
     color: #F5E642;
@@ -95,7 +96,7 @@ section[data-testid="stSidebar"] * { color: #F0EDE8 !important; }
     margin-bottom: .35rem;
 }
 .metric-value {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 2.2rem;
     font-weight: 800;
     color: #F0EDE8;
@@ -220,7 +221,7 @@ main_hour = hour_df[(hour_df["dteday"] >= str(start_date)) & (hour_df["dteday"] 
 # ─────────────────────────────────────────────
 #  HERO HEADER
 # ─────────────────────────────────────────────
-st.markdown('<div class="hero-title">Bike Sharing<br>Analytics</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-title">Bike Sharing Analytics</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-sub">Eksplorasi pola penyewaan sepeda · Washington D.C. · 2011–2012</div>', unsafe_allow_html=True)
 
 
@@ -286,7 +287,10 @@ with r1col2:
     season_total = main_day.groupby("season")["cnt"].sum()
     labels       = [season_map.get(s, str(s)) for s in season_total.index]
     sizes        = season_total.values
+    TEAL_DARK    = "#1E8A8A"
+    max_idx      = list(sizes).index(max(sizes))
     colors       = [YELLOW, TEAL, CORAL, VIOLET]
+    colors[max_idx] = TEAL_DARK
 
     fig, ax = plt.subplots(figsize=(4.2, 3.6))
     wedges, texts, autotexts = ax.pie(
@@ -294,9 +298,11 @@ with r1col2:
         colors=colors, startangle=140,
         wedgeprops=dict(width=0.55, edgecolor="#0D0D0D", linewidth=2),
         textprops={"fontsize": 9, "color": "#AAA"},
+        pctdistance=0.75,
     )
-    for at in autotexts:
-        at.set_fontsize(8.5)
+    for i, at in enumerate(autotexts):
+        at.set_fontsize(11)
+        at.set_fontweight("bold")
         at.set_color("#F0EDE8")
     ax.set_title("Proporsi per Musim", pad=10)
     fig.tight_layout()
@@ -401,16 +407,21 @@ with r3col1:
     if "time_category" in main_hour.columns:
         order   = ["Pagi", "Siang", "Sore", "Malam"]
         tc_data = main_hour.groupby("time_category")["cnt"].sum().reindex(order).fillna(0)
-        colors_tc = [YELLOW, CORAL, TEAL, VIOLET]
 
+        BLUE_DARK = "#000080"
+        bar_colors_tc = [BLUE_DARK if v == tc_data.max() else TEAL for v in tc_data.values]
         fig, ax = plt.subplots(figsize=(5.5, 4))
-        bars = ax.barh(tc_data.index, tc_data.values, color=colors_tc, height=0.55, zorder=3)
+        bars = ax.barh(tc_data.index, tc_data.values, color=bar_colors_tc, height=0.55, zorder=3)
         ax.bar_label(bars, fmt="{:,.0f}", fontsize=8.5, padding=5, color="#AAA")
         ax.set_title("Total Penyewaan per Kategori Waktu", pad=10)
         ax.set_xlabel("Total Penyewaan")
         ax.invert_yaxis()
         ax.grid(axis="x", linestyle="--")
         ax.set_axisbelow(True)
+        import matplotlib.ticker as mticker
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(
+            lambda x, _: f"{x/1_000_000:.1f}Jt" if x >= 1_000_000 else f"{x/1_000:.0f}K"
+        ))
         fig.tight_layout()
         st.pyplot(fig)
         plt.close(fig)
@@ -423,18 +434,21 @@ with r3col2:
     if "hr" in main_hour.columns:
         pivot = main_hour.pivot_table(
             index="hr", columns="workingday", values="cnt", aggfunc="mean"
-        ).rename(columns={0: "Libur/Akhir Pekan", 1: "Hari Kerja"})
+        ).rename(columns={"Hari Libur": "Libur/Akhir Pekan", "Hari Kerja": "Hari Kerja"})
 
         fig, ax = plt.subplots(figsize=(7, 4))
-        ax.plot(pivot.index, pivot.get("Hari Kerja",       pd.Series(dtype=float)),
-                color=YELLOW, linewidth=2.2, marker="o", markersize=3.5, label="Hari Kerja")
-        ax.plot(pivot.index, pivot.get("Libur/Akhir Pekan", pd.Series(dtype=float)),
-                color=TEAL,   linewidth=2.2, marker="s", markersize=3.5, label="Libur / Akhir Pekan",
-                linestyle="--")
-        ax.fill_between(pivot.index,
-                        pivot.get("Hari Kerja", 0),
-                        pivot.get("Libur/Akhir Pekan", 0),
-                        alpha=.08, color=YELLOW)
+        if "Hari Kerja" in pivot.columns:
+            ax.plot(pivot.index, pivot["Hari Kerja"],
+                    color=YELLOW, linewidth=2.2, marker="o", markersize=3.5, label="Hari Kerja")
+        if "Libur/Akhir Pekan" in pivot.columns:
+            ax.plot(pivot.index, pivot["Libur/Akhir Pekan"],
+                    color=TEAL, linewidth=2.2, marker="s", markersize=3.5, label="Libur / Akhir Pekan",
+                    linestyle="--")
+        if "Hari Kerja" in pivot.columns and "Libur/Akhir Pekan" in pivot.columns:
+            ax.fill_between(pivot.index,
+                            pivot["Hari Kerja"],
+                            pivot["Libur/Akhir Pekan"],
+                            alpha=.08, color=YELLOW)
         ax.set_title("Rata-rata Penyewaan per Jam dalam Sehari", pad=10)
         ax.set_xlabel("Jam")
         ax.set_ylabel("Rata-rata Penyewaan")
@@ -480,8 +494,9 @@ if "weathersit" in main_day.columns and "temp" in main_day.columns:
         weather_avg = wdf.groupby("weather_label")["cnt"].mean().sort_values(ascending=False)
 
         fig, ax = plt.subplots(figsize=(5.5, 4))
+        bar_colors = [BLUE_DARK if v == weather_avg.max() else TEAL for v in weather_avg.values]
         bars = ax.bar(weather_avg.index, weather_avg.values,
-                      color=[YELLOW, TEAL, CORAL, VIOLET][:len(weather_avg)],
+                      color=bar_colors,
                       alpha=.9, zorder=3, width=.55)
         ax.bar_label(bars, fmt="{:,.0f}", fontsize=8.5, padding=3, color="#AAA")
         ax.set_title("Rata-rata Penyewaan Berdasarkan Cuaca", pad=10)
@@ -489,6 +504,10 @@ if "weathersit" in main_day.columns and "temp" in main_day.columns:
         ax.tick_params(axis="x", rotation=15)
         ax.grid(axis="y", linestyle="--")
         ax.set_axisbelow(True)
+        import matplotlib.ticker as mticker
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(
+            lambda y, _: f"{y/1_000:.0f}K" if y >= 1_000 else f"{y:.0f}"
+        ))
         fig.tight_layout()
         st.pyplot(fig)
         plt.close(fig)
